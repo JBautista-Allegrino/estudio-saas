@@ -63,49 +63,30 @@ function App() {
   // VISTA 1: DASHBOARD (HISTORIAL)
   if (!examenSeleccionado) {
     return (
-      <div style={{ 
-    width: '100%', 
-    minHeight: '100vh', 
-    padding: '40px', 
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center' // Centra el encabezado, pero no limita el ancho
-  }}>
-    
-    {/* Encabezado */}
-    <header style={{ textAlign: 'center', marginBottom: '40px' }}>
-      <h1 style={{ fontSize: '3rem', margin: '0' }}>Mis Exámenes 📚</h1>
-      <p style={{ opacity: 0.7 }}>Panel de control de estudio - UADE</p>
-    </header>
+      <div style={{ padding: '40px', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', fontFamily: 'sans-serif' }}>
+        <h1 style={{ color: '#38bdf8' }}>Mis Exámenes 📚</h1>
 
-    {/* Zona de Carga */}
-    <section style={{ 
-      width: '100%', 
-      maxWidth: '800px', // El buscador/botón queda elegante si no es Gigante
-      marginBottom: '50px' 
-    }}>
-      <div className="upload-box">
-        {/* Aquí va tu botón de "Subir nuevo PDF" */}
-      </div>
-    </section>
-
-    {/* Grid de Tarjetas (Aquí está la magia) */}
-    <main style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-      gap: '25px', 
-      width: '100%' 
-    }}>
-      {examenes.map((ex) => (
-        <div key={ex.id} className="card-examen">
-          <h3>{ex.titulo}</h3>
-          <p>{ex.materia}</p>
-          <button>Repasar ahora</button>
+        {/* <--- BLOQUE DE CARGA DEBAJO DEL H1 */}
+        <div style={{ border: '2px dashed #38bdf8', padding: '30px', borderRadius: '15px', textAlign: 'center', marginBottom: '40px', backgroundColor: '#1e293b' }}>
+          <input type="file" id="pdf-upload" accept=".pdf" onChange={handleFileUpload} style={{ display: 'none' }} />
+          <label htmlFor="pdf-upload" style={{ cursor: 'pointer' }}>
+            <h2 style={{ margin: 0 }}>{subiendo ? "⏳ Procesando con IA..." : "📤 Subir nuevo PDF"}</h2>
+            <p style={{ color: '#94a3b8' }}>Seleccioná tus apuntes de la UADE</p>
+          </label>
         </div>
-      ))}
-    </main>
-  </div>
+
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {examenes.map(ex => (
+            <div key={ex.id} style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', border: '1px solid #334155' }}>
+              <div>
+                <h3>{ex.titulo}</h3>
+                <p style={{ color: '#94a3b8' }}>{ex.materia}</p>
+              </div>
+              <button onClick={() => setExamenSeleccionado(ex)} style={{ backgroundColor: '#38bdf8', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Repasar ahora</button>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
