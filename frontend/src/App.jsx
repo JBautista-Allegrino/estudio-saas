@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BookOpen, Calendar, ChevronLeft, CheckCircle, Upload } from 'lucide-react';
-
+const API_URL = "https://estudio-saas-api.onrender.com";
 function App() {
   const [examenes, setExamenes] = useState([]);
   const [examenSeleccionado, setExamenSeleccionado] = useState(null);
@@ -18,7 +18,7 @@ function App() {
 
   const cargarExamenes = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/mis-examenes');
+      const res = await axios.get('https://estudio-saas-api.onrender.com/mis-examenes');
       setExamenes(res.data.examenes);
     } catch (err) { console.error(err); }
   };
@@ -33,7 +33,7 @@ function App() {
 
     setSubiendo(true);
     try {
-      await axios.post('http://127.0.0.1:8000/generar-examen', formData, {
+      await axios.post('https://estudio-saas-api.onrender.com/generar-examen', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       await cargarExamenes(); // Refrescamos la lista
