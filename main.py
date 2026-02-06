@@ -10,10 +10,15 @@ load_dotenv()
 app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 
-# Permitimos que nuestro Frontend de React se conecte
+# Lista de orígenes permitidos (SIN la barra al final /)
+origins = [
+    "https://estudio-saas.vercel.app",
+    "http://localhost:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://estudio-saas.vercel.app/","http://localhost:5173"], # En producción pondremos la URL real
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
