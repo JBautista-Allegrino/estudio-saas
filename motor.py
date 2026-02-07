@@ -91,7 +91,15 @@ def evaluar_respuesta_abierta(pregunta, respuesta_usuario, contexto_pdf):
     Función para el 'Modo Examen Profundo'.
     Analiza si lo que escribió el alumno en su HP Victus es correcto.
     """
-    prompt_sistema = "Eres un evaluador de exámenes de Ingeniería exigente y preciso."
+    prompt_sistema = """
+    Eres un profesor de Ingeniería de la UADE extremadamente riguroso. 
+    Tu objetivo es certificar que el alumno comprende conceptos de Arquitectura de Computadores.
+    REGLAS DE EVALUACIÓN:
+    1. Si la respuesta es vaga, incompleta o "copia" el texto sin explicarlo, la nota es de 0 a 3.
+    2. Errores en magnitudes físicas (ej: $V = I \cdot R$) o lógica binaria bajan la nota a menos de 4.
+    3. Para un 10, la respuesta debe ser técnica, precisa y demostrar razonamiento propio.
+    4. Usa el contexto del PDF para desmentir afirmaciones incorrectas del alumno.
+    """
     
     prompt_usuario = f"""
     Contexto original del PDF: {contexto_pdf}

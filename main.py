@@ -94,3 +94,12 @@ async def api_evaluar_respuesta(req: EvaluacionRequest):
         return {"status": "success", "evaluacion": resultado_dict}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+    
+@app.delete("/eliminar-examen/{examen_id}")
+async def eliminar_examen(examen_id: int):
+    try:
+        # Borramos el registro que coincida con el ID
+        response = supabase.table("examenes").delete().eq("id", examen_id).execute()
+        return {"status": "success", "data": response.data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

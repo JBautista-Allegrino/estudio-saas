@@ -72,6 +72,24 @@ function App() {
 
   const enviarEvaluacion = async () => {
   if (!respuestaEscrita.trim()) return alert("Escribí algo primero");
+  
+  // ... después de enviarEvaluacion ...
+
+  const eliminarExamen = async (id) => {
+    // Es vital pedir confirmación para evitar borrados accidentales
+    if (!window.confirm("¿Estás seguro de que querés eliminar este examen?")) return;
+    
+    try {
+      await axios.delete(`${API_URL}/eliminar-examen/${id}`);
+      alert("Examen eliminado correctamente");
+      cargarExamenes(); // Refrescamos la lista para que desaparezca de la pantalla
+    } catch (err) {
+      console.error(err);
+      alert("Error al intentar eliminar el examen");
+    }
+  };
+
+  // RECIÉN AQUÍ EMPIEZAN LOS "if (!examenSeleccionado) ..."
 
   setEvaluando(true);
   try {
@@ -129,15 +147,29 @@ function App() {
         </div>
 
         <div style={{ display: 'grid', gap: '20px' }}>
-          {examenes.map(ex => (
-            <div key={ex.id} style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', border: '1px solid #334155' }}>
-              <div>
-                <h3>{ex.titulo}</h3>
-                <p style={{ color: '#94a3b8' }}>{ex.materia}</p>
-              </div>
-              <button onClick={() => setExamenSeleccionado(ex)} style={{ backgroundColor: '#38bdf8', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Repasar ahora</button>
-            </div>
-          ))}
+          {/* Dentro del mapeo de tus exámenes en el Dashboard */}
+{examenes.map((ex) => (
+  <div key={ex.id} style={{ /* tus estilos de tarjeta */ }}>
+    <div>
+      <h3>{ex.titulo}</h3>
+      <p>{ex.materia}</p>
+    </div>
+
+    <div style={{ display: 'flex', gap: '10px' }}>
+      <button onClick={() => setExamenSeleccionado(ex)}>
+        Repasar ahora
+      </button>
+
+      {/* AQUÍ ES DONDE "LEES" LA VARIABLE Y DESAPARECE EL ERROR */}
+      <button 
+        onClick={() => eliminarExamen(ex.id)} 
+        style={{ backgroundColor: '#ef4444', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer' }}
+      >
+        🗑️
+      </button>
+    </div>
+  </div>
+))}
         </div>
       </div>
     );
