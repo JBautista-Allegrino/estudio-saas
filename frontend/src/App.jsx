@@ -5,6 +5,7 @@ import { BookOpen, Calendar, ChevronLeft, CheckCircle, Upload, Trash2 } from 'lu
 const API_URL = "https://estudio-saas-api.onrender.com";
 
 function App() {
+  const [session, setSession] = useState(null);
   const [historialSesion, setHistorialSesion] = useState([]);
   const [examenes, setExamenes] = useState([]);
   const [examenSeleccionado, setExamenSeleccionado] = useState(null);
@@ -19,8 +20,25 @@ function App() {
   const [cantidad, setCantidad] = useState(5);
 
   useEffect(() => {
-    cargarExamenes();
-  }, []);
+  // 1. Obtener sesión actual al cargar
+  const checkSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    setSession(data.session);
+  };
+  checkSession();
+
+  // 2. Escuchar cambios (Login/Logout)
+  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    setSession(session);
+  });
+
+  return () => authListener.subscription.unsubscribe();
+}, []);
+
+// Modificamos cargarExamenes para que solo busque si hay sesión
+useEffect(() => {
+  if (session) cargarExamenes();
+}, [session]);
 
   const cargarExamenes = async () => {
     try {
@@ -30,26 +48,28 @@ function App() {
   };
 
   const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('modo', modo);      
-    formData.append('cantidad', cantidad); 
+  const file = event.target.files[0];
+  if (!file || !session) return; // <--- No sube si no hay usuario
 
-    setSubiendo(true);
-    try {
-        await axios.post(`${API_URL}/generar-examen`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        await cargarExamenes();
-        alert("¡Examen generado con éxito!");
-    } catch (error) {
-        alert("Error al procesar el PDF");
-    } finally {
-        setSubiendo(false);
-    }
-  };
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('modo', modo);
+  formData.append('cantidad', cantidad);
+  formData.append('user_id', session.user.id); // <--- ENVIAMOS TU "LLAVE" DE IDENTIDAD
+
+  setSubiendo(true);
+  try {
+    await axios.post(`${API_URL}/generar-examen`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    await cargarExamenes();
+    alert("¡Examen guardado en tu cuenta!");
+  } catch (error) {
+    alert("Error al procesar el PDF");
+  } finally {
+    setSubiendo(false);
+  }
+};
 
   // --- LÓGICA DE HISTORIAL Y CALIFICACIÓN ---
   const manejarRespuesta = (puntosGanados, feedbackActual = null, respuestaDada = null) => {
@@ -112,6 +132,22 @@ function App() {
       alert("Error al intentar eliminar el examen");
     }
   };
+
+  if (!session) {
+  return (
+    <div style={{ padding: '100px', textAlign: 'center', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white' }}>
+      <h1 style={{ color: '#38bdf8' }}>Bienvenido a tu SaaS de Estudio 🧠</h1>
+      <p>Iniciá sesión para ver tus exámenes de la UADE</p>
+      {/* Aquí podés usar un componente de Login simple o el Auth UI de Supabase */}
+      <button 
+        onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+        style={{ backgroundColor: '#1e293b', color: 'white', padding: '15px 30px', borderRadius: '8px', cursor: 'pointer', border: '1px solid #38bdf8' }}
+      >
+        Entrar con Google
+      </button>
+    </div>
+  );
+}
 
   if (!examenSeleccionado) {
     return (
