@@ -8,7 +8,7 @@ function App() {
   const [examenes, setExamenes] = useState([]);
   const [examenSeleccionado, setExamenSeleccionado] = useState(null);
   const [indicePregunta, setIndicePregunta] = useState(0);
-  const [puntos, setPuntos] = useState(0);
+  const [puntos, setPuntos] = useState(0); // Ahora acumula el total de notas (0-10)
   const [finalizado, setFinalizado] = useState(false);
   const [subiendo, setSubiendo] = useState(false); 
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
@@ -50,12 +50,17 @@ function App() {
     }
   };
 
-  const manejarRespuesta = (opcion, correcta) => {
-    if (opcion === correcta) setPuntos(puntos + 1);
+  // --- LÓGICA DE CALIFICACIÓN MEJORADA ---
+  const manejarRespuesta = (puntosGanados) => {
+    // Sumamos el valor numérico (0 a 10) al total
+    setPuntos((prevPuntos) => prevPuntos + puntosGanados); 
+    
     const siguiente = indicePregunta + 1;
     if (siguiente < examenSeleccionado.contenido_json.preguntas.length) {
       setIndicePregunta(siguiente);
-    } else { setFinalizado(true); }
+    } else { 
+      setFinalizado(true); 
+    }
   };
 
   const reiniciar = () => {
@@ -67,7 +72,6 @@ function App() {
     setRespuestaEscrita("");
   };
 
-  // --- FUNCIÓN ENVIAR EVALUACIÓN CORREGIDA ---
   const enviarEvaluacion = async () => {
     if (!respuestaEscrita.trim()) return alert("Escribí algo primero");
     
@@ -86,7 +90,6 @@ function App() {
     }
   };
 
-  // --- FUNCIÓN ELIMINAR EXAMEN CORREGIDA ---
   const eliminarExamen = async (id) => {
     if (!window.confirm("¿Estás seguro de que querés eliminar este examen?")) return;
     try {
@@ -144,12 +147,13 @@ function App() {
   }
 
   if (finalizado) {
-    const nota = (puntos / examenSeleccionado.contenido_json.preguntas.length) * 10;
+    // CALCULO DE PROMEDIO REAL (Suma de notas / Cantidad de preguntas)
+    const notaFinal = puntos / examenSeleccionado.contenido_json.preguntas.length;
     return (
       <div style={{ padding: '40px', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', textAlign: 'center' }}>
         <CheckCircle size={80} color="#22c55e" style={{ marginBottom: '20px' }} />
         <h1>¡Examen Completado!</h1>
-        <p style={{ fontSize: '1.5rem' }}>Tu nota: <span style={{ color: '#38bdf8' }}>{nota.toFixed(1)} / 10</span></p>
+        <p style={{ fontSize: '1.5rem' }}>Tu promedio final: <span style={{ color: '#38bdf8' }}>{notaFinal.toFixed(1)} / 10</span></p>
         <button onClick={reiniciar} style={{ marginTop: '30px', backgroundColor: '#38bdf8', border: 'none', padding: '12px 30px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Volver al inicio</button>
       </div>
     );
@@ -185,10 +189,10 @@ function App() {
                 <hr style={{ borderColor: '#334155', margin: '20px 0' }} />
                 <p style={{ color: '#94a3b8', fontStyle: 'italic' }}><strong>Respuesta ideal:</strong> {resultadoEvaluacion.respuesta_ideal}</p>
                 <button onClick={() => {
-                    if(resultadoEvaluacion.nota >= 7) setPuntos(puntos + 1);
+                    // SUMAMOS LA NOTA REAL (0-10) Y RESETEAMOS
+                    manejarRespuesta(resultadoEvaluacion.nota); 
                     setResultadoEvaluacion(null);
                     setRespuestaEscrita("");
-                    manejarRespuesta("abierta", "abierta"); 
                   }} style={{ marginTop: '20px', backgroundColor: '#38bdf8', border: 'none', padding: '12px 25px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                   Siguiente Pregunta ➔
                 </button>
@@ -198,7 +202,13 @@ function App() {
         ) : (
           <div style={{ display: 'grid', gap: '15px' }}>
             {preguntaActual.opciones.map((opt, i) => (
-              <button key={i} onClick={() => manejarRespuesta(opt, preguntaActual.respuesta_correcta)} style={{ textAlign: 'left', padding: '20px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer' }}>{opt}</button>
+              <button 
+                key={i} 
+                onClick={() => manejarRespuesta(opt === preguntaActual.respuesta_correcta ? 10 : 0)} 
+                style={{ textAlign: 'left', padding: '20px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer' }}
+              >
+                {opt}
+              </button>
             ))}
           </div>
         )}
