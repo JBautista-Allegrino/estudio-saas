@@ -5,10 +5,11 @@ import { BookOpen, Calendar, ChevronLeft, CheckCircle, Upload, Trash2 } from 'lu
 const API_URL = "https://estudio-saas-api.onrender.com";
 
 function App() {
+  const [historialSesion, setHistorialSesion] = useState([]);
   const [examenes, setExamenes] = useState([]);
   const [examenSeleccionado, setExamenSeleccionado] = useState(null);
   const [indicePregunta, setIndicePregunta] = useState(0);
-  const [puntos, setPuntos] = useState(0); // Ahora acumula el total de notas (0-10)
+  const [puntos, setPuntos] = useState(0); 
   const [finalizado, setFinalizado] = useState(false);
   const [subiendo, setSubiendo] = useState(false); 
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
@@ -50,9 +51,19 @@ function App() {
     }
   };
 
-  // --- LÓGICA DE CALIFICACIÓN MEJORADA ---
-  const manejarRespuesta = (puntosGanados) => {
-    // Sumamos el valor numérico (0 a 10) al total
+  // --- LÓGICA DE HISTORIAL Y CALIFICACIÓN ---
+  const manejarRespuesta = (puntosGanados, feedbackActual = null, respuestaDada = null) => {
+    // Capturamos el estado actual de la pregunta antes de avanzar
+    setHistorialSesion((prev) => [
+      ...prev,
+      {
+        pregunta: preguntaActual.pregunta,
+        nota: puntosGanados,
+        feedback: feedbackActual,
+        tuRespuesta: respuestaDada
+      }
+    ]);
+
     setPuntos((prevPuntos) => prevPuntos + puntosGanados); 
     
     const siguiente = indicePregunta + 1;
@@ -70,6 +81,7 @@ function App() {
     setFinalizado(false);
     setResultadoEvaluacion(null);
     setRespuestaEscrita("");
+    setHistorialSesion([]); // Importante: Limpiar el historial para el próximo test
   };
 
   const enviarEvaluacion = async () => {
@@ -146,15 +158,38 @@ function App() {
     );
   }
 
+  // --- VISTA DE RESULTADOS PRO ---
   if (finalizado) {
-    // CALCULO DE PROMEDIO REAL (Suma de notas / Cantidad de preguntas)
     const notaFinal = puntos / examenSeleccionado.contenido_json.preguntas.length;
     return (
-      <div style={{ padding: '40px', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', textAlign: 'center' }}>
-        <CheckCircle size={80} color="#22c55e" style={{ marginBottom: '20px' }} />
-        <h1>¡Examen Completado!</h1>
-        <p style={{ fontSize: '1.5rem' }}>Tu promedio final: <span style={{ color: '#38bdf8' }}>{notaFinal.toFixed(1)} / 10</span></p>
-        <button onClick={reiniciar} style={{ marginTop: '30px', backgroundColor: '#38bdf8', border: 'none', padding: '12px 30px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Volver al inicio</button>
+      <div style={{ padding: '40px', backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', fontFamily: 'sans-serif' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <CheckCircle size={80} color="#22c55e" style={{ marginBottom: '20px', margin: '0 auto' }} />
+          <h1>¡Examen Completado!</h1>
+          <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            Promedio final: <span style={{ color: notaFinal >= 4 ? '#38bdf8' : '#ef4444' }}>{notaFinal.toFixed(1)} / 10</span>
+          </p>
+        </div>
+
+        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'grid', gap: '20px' }}>
+          <h2 style={{ borderBottom: '1px solid #334155', paddingBottom: '10px' }}>Resumen Detallado</h2>
+          {historialSesion.map((item, i) => (
+            <div key={i} style={{ backgroundColor: '#1e293b', padding: '25px', borderRadius: '15px', borderLeft: `6px solid ${item.nota >= 7 ? '#22c55e' : item.nota >= 4 ? '#eab308' : '#ef4444'}` }}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#38bdf8', fontSize: '1.1rem' }}>Pregunta {i + 1}: {item.pregunta}</h4>
+              <p style={{ fontSize: '0.95rem', marginBottom: '10px' }}><strong>Tu respuesta:</strong> {item.tuRespuesta}</p>
+              {item.feedback && (
+                <div style={{ backgroundColor: '#0f172a', padding: '15px', borderRadius: '10px', marginTop: '10px' }}>
+                  <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: 0 }}><strong>Feedback de la IA:</strong> {item.feedback}</p>
+                </div>
+              )}
+              <p style={{ margin: '15px 0 0 0', fontWeight: 'bold', textAlign: 'right', fontSize: '1.1rem' }}>Nota: {item.nota}/10</p>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={reiniciar} style={{ display: 'block', margin: '50px auto 0', backgroundColor: '#38bdf8', border: 'none', padding: '15px 50px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem' }}>
+          Volver al Inicio
+        </button>
       </div>
     );
   }
@@ -189,8 +224,8 @@ function App() {
                 <hr style={{ borderColor: '#334155', margin: '20px 0' }} />
                 <p style={{ color: '#94a3b8', fontStyle: 'italic' }}><strong>Respuesta ideal:</strong> {resultadoEvaluacion.respuesta_ideal}</p>
                 <button onClick={() => {
-                    // SUMAMOS LA NOTA REAL (0-10) Y RESETEAMOS
-                    manejarRespuesta(resultadoEvaluacion.nota); 
+                    // PASAMOS LA NOTA, EL FEEDBACK Y LA RESPUESTA AL HISTORIAL
+                    manejarRespuesta(resultadoEvaluacion.nota, resultadoEvaluacion.feedback, respuestaEscrita); 
                     setResultadoEvaluacion(null);
                     setRespuestaEscrita("");
                   }} style={{ marginTop: '20px', backgroundColor: '#38bdf8', border: 'none', padding: '12px 25px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
@@ -204,7 +239,14 @@ function App() {
             {preguntaActual.opciones.map((opt, i) => (
               <button 
                 key={i} 
-                onClick={() => manejarRespuesta(opt === preguntaActual.respuesta_correcta ? 10 : 0)} 
+                onClick={() => {
+                  const esCorrecta = opt === preguntaActual.respuesta_correcta;
+                  manejarRespuesta(
+                    esCorrecta ? 10 : 0, 
+                    esCorrecta ? "¡Excelente elección!" : `Respuesta incorrecta. La opción válida era: ${preguntaActual.respuesta_correcta}`,
+                    opt
+                  );
+                }} 
                 style={{ textAlign: 'left', padding: '20px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', color: 'white', cursor: 'pointer' }}
               >
                 {opt}
