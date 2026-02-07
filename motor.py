@@ -59,7 +59,7 @@ def generar_examen_ia(contenido, modo="rapido", cantidad=5):
 
     # 4. Llamada a la API (usando las variables ya definidas arriba)
     response = client.chat.completions.create(
-        model="llama-3-8b-8192",
+        model="llama-3.1-8b-instant",
         messages=[
             {"role": "system", "content": prompt_sistema},
             {"role": "user", "content": prompt_usuario}
@@ -110,7 +110,7 @@ def evaluar_respuesta_abierta(pregunta, respuesta_usuario, contexto_pdf):
     """
 
     response = client.chat.completions.create(
-        model="llama-3-8b-8192",
+        model="llama-3.1-8b-instant",
         messages=[
             {"role": "system", "content": prompt_sistema},
             {"role": "user", "content": prompt_usuario}
