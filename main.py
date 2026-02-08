@@ -52,21 +52,18 @@ async def api_generar_examen(
     file: UploadFile = File(...),
     modo: str = Form("rapido"),
     cantidad: int = Form(5),
-    user_id: str = Form(...) 
+    user_id: str = Form(...)
 ):
     try:
-        logger.info(f"Iniciando generación de examen para usuario: {user_id}")
-        
-        # 1. Procesamiento en Memoria (Safe for Render)
         contenido_pdf = await file.read()
         texto = extraer_texto_pdf(contenido_pdf)
         
-        if not texto or "Error" in texto:
-            raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF")
+        # Manejo de error de extracción (Error 400 en logs)
+        if texto == "ERROR_TEXTO_VACIO":
+            return {"status": "error", "message": "El PDF no contiene texto legible (puede ser una imagen)."}
 
-        # 2. IA Engine
         examen_str = generar_examen_ia(texto, modo=modo, cantidad=cantidad)
-        examen_dict = json.loads(examen_str) 
+        examen_dict = json.loads(examen_str) # Ahora 'json' sí estará definido 
         
         # 3. Estructura de Persistencia
         data_para_guardar = {
@@ -82,10 +79,9 @@ async def api_generar_examen(
         
         logger.info(f"Examen guardado exitosamente: {response.data[0]['id'] if response.data else 'Error'}")
         
-        return {"status": "success", "db_response": response.data, "examen": examen_dict}
-
+        return {"status": "success", "examen": examen_dict}
     except Exception as e:
-        logger.error(f"Error fatal en generar-examen: {str(e)}")
+        logger.error(f"Error fatal: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 @app.get("/mis-examenes")

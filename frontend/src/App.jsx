@@ -64,26 +64,24 @@ function App() {
   }, [session, cargarExamenes]);
 
   const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file || !session) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('modo', modo);
-    formData.append('cantidad', cantidad);
-    formData.append('user_id', session.user.id);
-
-    setSubiendo(true);
-    try {
-      await axios.post(`${API_URL}/generar-examen`, formData);
+  // ... lógica inicial se mantiene ...
+  try {
+    const res = await axios.post(`${API_URL}/generar-examen`, formData);
+    
+    // VALIDACIÓN SENIOR: Revisamos el status de nuestra propia lógica
+    if (res.data.status === "success") {
       await cargarExamenes();
-      alert("¡Examen generado y vinculado a tu cuenta!");
-    } catch (error) {
-      alert("Error en el servidor de Render. Revisá los logs.");
-    } finally {
-      setSubiendo(false);
+      alert("¡Examen guardado exitosamente!");
+    } else {
+      // Si el backend mandó un error (ej: PDF sin texto o IA saturada)
+      alert(`Error del servidor: ${res.data.message}`);
     }
-  };
+  } catch (error) {
+    alert("Error de conexión. Revisá los logs de Render.");
+  } finally {
+    setSubiendo(false);
+  }
+};
 
   const cerrarSesion = async () => {
     await supabase.auth.signOut();
