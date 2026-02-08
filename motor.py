@@ -51,11 +51,11 @@ def generar_examen_ia(contenido, modo="rapido", cantidad=5):
 
     # Prompt técnico con escape de caracteres para Arquitectura de Computadores
     prompt_sistema = r"""
-    Eres un profesor de Ingeniería de la UADE experto en Arquitectura de Computadores.
-    TU TAREA: Generar un examen técnico en formato JSON.
-    REGLA ESTRICTA: Tu respuesta debe ser ÚNICAMENTE el objeto JSON, sin texto previo ni posterior.
-    Si incluyes fórmulas matemáticas, asegúrate de escapar las comillas dobles internas.
-    """
+Eres un profesor de Ingeniería de la UADE. 
+REGLA DE ORO: Los valores de 'pregunta', 'opciones' y 'feedback' deben ser SIEMPRE TEXTO PLANO (strings).
+PROHIBIDO: No devuelvas objetos o diccionarios dentro de esos campos. 
+Si el material es complejo, resume la lógica en una sola cadena de texto.
+"""
 
     if modo == "rapido":
         formato_json = '{"examen_titulo": "Repaso Técnico", "preguntas": [{"pregunta": "...", "opciones": ["A", "B", "C"], "respuesta_correcta": "...", "explicacion": "..."}]}'
