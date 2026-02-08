@@ -64,24 +64,37 @@ function App() {
   }, [session, cargarExamenes]);
 
   const handleFileUpload = async (event) => {
-  // ... lógica inicial se mantiene ...
-  try {
-    const res = await axios.post(`${API_URL}/generar-examen`, formData);
-    
-    // VALIDACIÓN SENIOR: Revisamos el status de nuestra propia lógica
-    if (res.data.status === "success") {
-      await cargarExamenes();
-      alert("¡Examen guardado exitosamente!");
-    } else {
-      // Si el backend mandó un error (ej: PDF sin texto o IA saturada)
-      alert(`Error del servidor: ${res.data.message}`);
+    const file = event.target.files[0];
+    if (!file || !session) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('modo', modo);
+    formData.append('cantidad', cantidad);
+    formData.append('user_id', session.user.id);
+
+    setSubiendo(true);
+    try {
+      // Forzamos el header de multipart para asegurar compatibilidad
+      const res = await axios.post(`${API_URL}/generar-examen`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (res.data.status === "success") {
+        await cargarExamenes();
+        alert("¡Examen guardado!");
+      } else {
+        // Esto atrapará el error de "PDF sin texto" o fallos de la IA
+        alert(`Error en el servidor: ${res.data.message}`);
+      }
+    } catch (error) {
+      // SENIOR DEBUG: Verificamos si es CORS o Servidor caído
+      console.error("Error completo de Axios:", error);
+      alert("Error de conexión. Abrí la Consola (F12) para ver el detalle técnico.");
+    } finally {
+      setSubiendo(false);
     }
-  } catch (error) {
-    alert("Error de conexión. Revisá los logs de Render.");
-  } finally {
-    setSubiendo(false);
-  }
-};
+  };
 
   const cerrarSesion = async () => {
     await supabase.auth.signOut();
