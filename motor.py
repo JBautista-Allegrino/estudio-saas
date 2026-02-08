@@ -13,25 +13,37 @@ client = OpenAI(
 )
 
 def extraer_texto_pdf(contenido_bytes):
-    """Extrae texto de un PDF directamente desde la memoria (bytes)."""
+    """Extrae texto con limitación de tokens para evitar Error 413."""
     texto_acumulado = ""
     try:
-        # Abrimos el PDF desde el stream de bytes enviado por FastAPI
         with fitz.open(stream=contenido_bytes, filetype="pdf") as doc:
             for pagina in doc:
                 texto_acumulado += pagina.get_text()
-        return texto_acumulado
+        
+        # VALIDACIÓN: Si no hay texto, el PDF es probablemente una imagen
+        if not texto_acumulado.strip():
+            return "ERROR: El PDF parece ser una imagen o no tiene texto legible."
+
+        # SOLUCIÓN ERROR 413: Truncamos a ~15,000 caracteres (aprox 4000-5000 tokens)
+        # Esto asegura que siempre entremos en el límite de Groq
+        return texto_acumulado[:15000] 
     except Exception as e:
-        return f"Error al leer el PDF desde memoria: {e}"
+        return f"Error al leer el PDF: {e}"
 
 def generar_examen_ia(contenido, modo="rapido", cantidad=5):
-    """Generador de exámenes con rigor de la UADE."""
-    
-    # Usamos Raw Strings (r"") para evitar errores de escape con símbolos técnicos
+    # Si recibimos el mensaje de error de la extracción, lo devolvemos directo
+    if contenido.startswith("ERROR:"):
+        return json.dumps({"error": contenido})
+
+    # Reforzamos el prompt para evitar fallos de JSON (Error 400)
     prompt_sistema = r"""
     Eres un profesor de Ingeniería de la UADE. 
-    Tu tarea es generar un examen riguroso y técnico en formato JSON. Usa Español.
+    REGLA DE ORO: Tu respuesta debe ser EXCLUSIVAMENTE un objeto JSON válido.
+    No incluyas texto antes o después del JSON. 
+    Escapa correctamente caracteres especiales en fórmulas matemáticas.
     """
+    
+    # ... resto de la lógica ...
 
     if modo == "rapido":
         formato_json = '{"preguntas": [{"pregunta": "...", "opciones": ["A", "B", "C"], "respuesta_correcta": "...", "explicacion": "..."}]}'
