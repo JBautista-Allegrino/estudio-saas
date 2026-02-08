@@ -1,4 +1,5 @@
 import os
+import json
 import fitz  # PyMuPDF
 from openai import OpenAI
 from dotenv import load_dotenv
