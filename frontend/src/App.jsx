@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js'; // IMPORTANTE: Nueva impor
 import { BookOpen, Calendar, ChevronLeft, CheckCircle, Upload, Trash2, LogOut } from 'lucide-react';
 
 // 1. INICIALIZACIÓN DE SUPABASE (Asegurate de poner tus llaves reales aquí)
-const supabaseUrl = "TU_URL_DE_SUPABASE";
-const supabaseKey = "TU_KEY_ANON_DE_SUPABASE";
+const supabaseUrl = "https://ucndntntyeqkdlzxgfsm.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjbmRudG50eWVxa2RsenhnZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjYyNjIsImV4cCI6MjA4NTkwMjI2Mn0.A0eSlPbz_icnFmrQbtrosQypgszvZyKkMnwMJvQfP1E";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const API_URL = "https://estudio-saas-api.onrender.com";
